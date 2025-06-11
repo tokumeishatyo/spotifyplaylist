@@ -49,8 +49,8 @@ class PlaylistManager {
         try {
             const response = await fetch('/api/playlists');
             if (response.status === 401) {
-                // Redirect to login
-                window.location.href = '/login';
+                // Redirect to root for authentication
+                window.location.href = '/';
                 return;
             }
             
