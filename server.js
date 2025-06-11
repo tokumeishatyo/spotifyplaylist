@@ -1,5 +1,5 @@
 const express = require('express');
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -8,23 +8,29 @@ require('dotenv').config();
 // カスタムミドルウェアとルートをインポート
 const sessionMiddleware = require('./middleware/session');
 const authRoutes = require('./routes/auth');
+const apiRoutes = require('./routes/api');
 
 const app = express();
-const PORT = 8089;
+const PORT = process.env.PORT || 3000;
 
 // 環境変数をエクスポート（他のモジュールで使用するため）
-process.env.REDIRECT_URI = process.env.REDIRECT_URI || `https://localhost:${PORT}/callback`;
+process.env.REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
 
 // ミドルウェアの設定
 app.use(express.json());
-app.use(express.static('public'));
 app.use(sessionMiddleware);
 
-// 認証関連のルートを登録
+// 認証関連のルートを登録（静的ファイルより先に）
 app.use('/', authRoutes);
 
+// 静的ファイルは認証後にのみアクセス可能
+app.use(express.static('public'));
+
 // API Routes
-app.get('/api/playlists', async (req, res) => {
+app.use('/api', apiRoutes);
+
+// Legacy API Routes (to be removed later)
+app.get('/api/playlists-legacy', async (req, res) => {
     if (!req.session.access_token) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -151,26 +157,10 @@ app.get('/api/me', async (req, res) => {
     res.json({ userId: req.session.userId });
 });
 
-// Create HTTPS server
+// Create HTTP server
 function startServer() {
-    const certPath = path.join(__dirname, 'certs');
-    const keyPath = path.join(certPath, 'localhost-key.pem');
-    const certFilePath = path.join(certPath, 'localhost.pem');
-    
-    // Check if certificates exist
-    if (!fs.existsSync(keyPath) || !fs.existsSync(certFilePath)) {
-        console.error('SSL certificates not found. Please generate certificates first.');
-        console.error('Run: npm run generate-cert');
-        process.exit(1);
-    }
-    
-    const serverOptions = {
-        key: fs.readFileSync(keyPath),
-        cert: fs.readFileSync(certFilePath)
-    };
-    
-    https.createServer(serverOptions, app).listen(PORT, () => {
-        console.log(`Server running at https://localhost:${PORT}`);
+    http.createServer(app).listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
         console.log('Make sure to set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env file');
     });
 }

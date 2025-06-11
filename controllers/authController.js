@@ -5,7 +5,7 @@ const path = require('path');
 // 環境変数から設定を取得
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI || 'https://localhost:8089/callback';
+const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:5173/callback';
 
 // Spotifyの認証に必要なスコープ
 const SCOPES = [
@@ -20,6 +20,20 @@ const SCOPES = [
  * 認証状態を確認し、未認証の場合はSpotify認証ページへリダイレクト
  */
 const handleRootAccess = (req, res) => {
+    // 環境変数のチェック
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+        console.error('Missing Spotify credentials in environment variables');
+        return res.status(500).send(`
+            <html>
+                <body>
+                    <h1>設定エラー</h1>
+                    <p>Spotify APIの認証情報が設定されていません。</p>
+                    <p>SPOTIFY_CLIENT_IDとSPOTIFY_CLIENT_SECRETを.envファイルに設定してください。</p>
+                </body>
+            </html>
+        `);
+    }
+
     // セッションにアクセストークンが存在するかチェック
     if (req.session.access_token) {
         // 認証済み: メイン画面を表示
@@ -41,6 +55,7 @@ const handleRootAccess = (req, res) => {
                 show_dialog: true // 毎回認証画面を表示
             }).toString();
 
+        console.log('Redirecting to Spotify auth:', authUrl);
         res.redirect(authUrl);
     }
 };

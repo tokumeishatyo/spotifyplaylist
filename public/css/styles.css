@@ -93,13 +93,26 @@ body.dark-mode {
 }
 
 /* Loading Indicator */
-.loading-indicator {
+.loading-indicator,
+.loading {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 3rem;
     gap: 1rem;
+}
+
+/* Error and No Content Messages */
+.error,
+.no-playlists {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.error {
+    color: var(--delete-button-bg);
 }
 
 .spinner {
@@ -121,56 +134,58 @@ body.dark-mode {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: var(--shadow);
+    margin-bottom: 1rem;
 }
 
-.playlist-header {
+.playlist-summary {
     display: flex;
     align-items: center;
     padding: 1rem;
     cursor: pointer;
     transition: background-color 0.2s;
+    list-style: none;
 }
 
-.playlist-header:hover {
+.playlist-summary:hover {
     background-color: var(--hover-bg);
 }
 
-.playlist-header::after {
-    content: '›';
-    margin-left: auto;
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    transition: transform 0.2s;
+.playlist-summary::marker {
+    display: none;
 }
 
-.playlist-item[open] .playlist-header::after {
-    transform: rotate(90deg);
+.playlist-summary::-webkit-details-marker {
+    display: none;
 }
 
-.playlist-checkbox,
-.track-checkbox {
+.playlist-item[open] .playlist-summary {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.item-checkbox {
     width: 20px;
     height: 20px;
     margin-right: 1rem;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
-.playlist-checkbox:disabled,
-.track-checkbox:disabled {
+.item-checkbox:disabled {
     cursor: not-allowed;
     opacity: 0.5;
 }
 
-.playlist-image,
+.playlist-cover,
 .track-image {
     border-radius: 4px;
     margin-right: 1rem;
     object-fit: cover;
 }
 
-.playlist-image {
-    width: 60px;
-    height: 60px;
+.playlist-cover {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
 }
 
 .track-image {
@@ -184,7 +199,7 @@ body.dark-mode {
 }
 
 /* Track List */
-.track-list {
+.tracks-container {
     padding: 0 1rem 1rem 1rem;
 }
 

@@ -54,13 +54,36 @@ class PlaylistManager {
                 return;
             }
             
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
-            this.playlists = data.items || [];
-            window.currentUserId = data.currentUserId;
+            // Check if data is an array (new API) or object with items (old API)
+            if (Array.isArray(data)) {
+                this.playlists = data;
+                // Get current user ID separately if needed
+                this.loadCurrentUserId();
+            } else {
+                this.playlists = data.items || [];
+                window.currentUserId = data.currentUserId;
+            }
             this.renderPlaylists();
         } catch (error) {
             console.error('Error loading playlists:', error);
             this.showNotification('プレイリストの読み込みに失敗しました', 'error');
+        }
+    }
+
+    async loadCurrentUserId() {
+        try {
+            const response = await fetch('/api/me');
+            if (response.ok) {
+                const data = await response.json();
+                window.currentUserId = data.userId;
+            }
+        } catch (error) {
+            console.error('Error loading user ID:', error);
         }
     }
 
@@ -98,8 +121,10 @@ class PlaylistManager {
         });
 
         const image = document.createElement('img');
-        image.className = 'playlist-image';
-        image.src = playlist.images?.[0]?.url || '/images/placeholder.png';
+        image.className = 'playlist-cover';
+        // Handle both old format (playlist.images) and new format (playlist.imageUrl)
+        const imageUrl = playlist.imageUrl || playlist.images?.[0]?.url || '/images/placeholder.png';
+        image.src = imageUrl;
         image.alt = playlist.name;
 
         const title = document.createElement('span');
@@ -156,7 +181,9 @@ class PlaylistManager {
 
         // Check if user has edit permissions
         const currentUserId = this.getCurrentUserId();
-        const canEdit = playlist.owner.id === currentUserId || playlist.collaborative;
+        // Handle both old format (playlist.owner.id) and new format (playlist.isEditable)
+        const canEdit = playlist.isEditable !== undefined ? playlist.isEditable : 
+                       (playlist.owner?.id === currentUserId || playlist.collaborative);
 
         tracks.forEach((item, index) => {
             if (!item.track) return; // Skip null tracks
