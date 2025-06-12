@@ -159,7 +159,7 @@ app.get('/api/me', async (req, res) => {
 
 // Create HTTP server
 function startServer() {
-    http.createServer(app).listen(PORT, () => {
+    http.createServer(app).listen(PORT, '0.0.0.0', () => {
         console.log(`Server running at http://localhost:${PORT}`);
         console.log('Make sure to set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env file');
     });
